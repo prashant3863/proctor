@@ -5,9 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/gojektech/proctor/proctord/storage/postgres"
+	"github.com/gojektech/proctor/proctord/utility"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -70,5 +72,25 @@ func TestJobsExecutionAuditLogPostgresClientFailure(t *testing.T) {
 	err = testStore.JobsExecutionAuditLog("", "", "", "", "", map[string]string{})
 
 	assert.Error(t, err)
+	mockPostgresClient.AssertExpectations(t)
+}
+
+func TestJobsStatusGet(t *testing.T) {
+	mockPostgresClient := &postgres.ClientMock{}
+	testStore := New(mockPostgresClient)
+
+	data := postgres.JobsExecutionAuditLog{
+		JobName: base64.StdEncoding.EncodeToString(encodedJobArgs.Bytes()),
+	}
+
+	mockPostgresClient.On("NamedQuery",
+		"SELECT job_execution_status from jobs_execution_audit_log where job_name = :job_name",
+		params).
+		Return().
+		Once()
+
+	status, err = testStore.GetJobStatus(jobName)
+	fmt.Print(status)
+	assert.Equal(status, utility.JobSucceeded)
 	mockPostgresClient.AssertExpectations(t)
 }

@@ -13,6 +13,7 @@ import (
 
 type Client interface {
 	NamedExec(string, interface{}) error
+	NamedQuery(string, interface{}) (*sqlx.Rows, error)
 	Close() error
 }
 
@@ -40,6 +41,11 @@ func NewClient() Client {
 func (client *client) NamedExec(query string, data interface{}) error {
 	_, err := client.db.NamedExec(query, data)
 	return err
+}
+
+func (client *client) NamedQuery(query string, data interface{}) (*sqlx.Rows, error) {
+	rows, err := client.db.NamedQuery(query, data)
+	return rows, err
 }
 
 func (client *client) Close() error {

@@ -11,6 +11,7 @@ import (
 type Store interface {
 	JobsExecutionAuditLog(string, string, string, string, string, map[string]string) error
 	UpdateJobsExecutionAuditLog(string, string) error
+	GetJobStatus(string) (string, error)
 }
 
 type store struct {
@@ -49,4 +50,31 @@ func (store *store) UpdateJobsExecutionAuditLog(jobSubmittedForExecution, status
 	}
 
 	return store.postgresClient.NamedExec("UPDATE jobs_execution_audit_log SET job_execution_status = :job_execution_status where job_submitted_for_execution = :job_submitted_for_execution", &jobsExecutionAuditLog)
+}
+
+func (store *store) GetJobStatus(jobName string) (string, error) {
+	jobsExecutionAuditLog := postgres.JobsExecutionAuditLog{
+		JobName: jobName,
+	}
+
+	jobsExecutionAuditLogQueryResult, err := store.postgresClient.NamedQuery("SELECT job_execution_status from jobs_execution_audit_log where job_name = :job_name", jobsExecutionAuditLog)
+	if err != nil {
+		return "", err
+	}
+
+	jobsExecutionAuditLogResult := []postgres.JobsExecutionAuditLog{}
+	for jobsExecutionAuditLogQueryResult.Next() {
+		res := postgres.JobsExecutionAuditLog{}
+		err = jobsExecutionAuditLogQueryResult.StructScan(&res)
+		if err != nil {
+			return "", err
+		}
+		jobsExecutionAuditLogResult = append(jobsExecutionAuditLogResult, res)
+	}
+
+	if len(jobsExecutionAuditLogResult) == 0 {
+		return "", nil
+	}
+
+	return jobsExecutionAuditLogResult[0].JobExecutionStatus, nil
 }
