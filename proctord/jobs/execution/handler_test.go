@@ -14,6 +14,7 @@ import (
 	"github.com/gojektech/proctor/proctord/jobs/metadata"
 	"github.com/gojektech/proctor/proctord/jobs/secrets"
 	"github.com/gojektech/proctor/proctord/kubernetes"
+	"github.com/gojektech/proctor/proctord/storage"
 	"github.com/gojektech/proctor/proctord/utility"
 
 	"github.com/stretchr/testify/assert"
@@ -27,6 +28,7 @@ type ExecutionerTestSuite struct {
 	mockMetadataStore *metadata.MockStore
 	mockSecretsStore  *secrets.MockStore
 	mockAuditor       *audit.MockAuditor
+	mockStore         *storage.MockStore
 	testExecutioner   Executioner
 }
 
@@ -35,7 +37,8 @@ func (suite *ExecutionerTestSuite) SetupTest() {
 	suite.mockMetadataStore = &metadata.MockStore{}
 	suite.mockSecretsStore = &secrets.MockStore{}
 	suite.mockAuditor = &audit.MockAuditor{}
-	suite.testExecutioner = NewExecutioner(&suite.mockKubeClient, suite.mockMetadataStore, suite.mockSecretsStore, suite.mockAuditor)
+	suite.mockStore = &storage.MockStore{}
+	suite.testExecutioner = NewExecutioner(&suite.mockKubeClient, suite.mockMetadataStore, suite.mockSecretsStore, suite.mockAuditor, suite.mockStore)
 }
 
 func (suite *ExecutionerTestSuite) TestSuccessfulJobExecution() {
